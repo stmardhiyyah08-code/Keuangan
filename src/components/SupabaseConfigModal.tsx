@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Database, CheckCircle2, XCircle, X, ShieldCheck, RefreshCw, ExternalLink } from 'lucide-react';
 import { SupabaseConfig } from '../types';
+import { testSupabaseConnection } from '../lib/supabase';
 
 interface SupabaseConfigModalProps {
   isOpen: boolean;
@@ -22,16 +23,16 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleTestConnection = () => {
+  const handleTestConnection = async () => {
     if (!url || !anonKey) {
       setMessage('Harap masukkan Supabase URL dan Anon Key terlebih dahulu.');
       return;
     }
     setTesting(true);
-    setTimeout(() => {
-      setTesting(false);
-      setMessage('✅ Koneksi Supabase berhasil diverifikasi!');
-    }, 1200);
+    setMessage(null);
+    const result = await testSupabaseConnection(url, anonKey);
+    setTesting(false);
+    setMessage(result.success ? `✅ ${result.message}` : `❌ ${result.message}`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -31,7 +31,7 @@ import { Transaction, Account, Category, Budget, User } from '../types';
 import { formatCurrency, formatDateIndonesian } from '../lib/formatters';
 
 interface DashboardViewProps {
-  currentUser: User;
+  currentUser: User | null;
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];
@@ -155,7 +155,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 rounded-full text-xs font-black bg-white/20 backdrop-blur-md text-white shadow-xs">
-                Halo, {currentUser.name} 👋
+                Halo, {currentUser?.name || 'Pengguna'} 👋
               </span>
               <span className={`px-3 py-1 rounded-full text-xs font-black border ${healthColor}`}>
                 {healthLabel}

@@ -19,65 +19,8 @@ if (!fs.existsSync(DATA_DIR)) {
 
 // Initial Database Template
 const DEFAULT_DB = {
-  users: [
-    {
-      id: 'user-demo',
-      name: 'Ahmad Rizky',
-      email: 'ahmad.rizky@example.com',
-      currency: 'IDR',
-      darkMode: false,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'user-biz',
-      name: 'Toko Berkah Usaha',
-      email: 'berkah.usaha@example.com',
-      currency: 'IDR',
-      darkMode: true,
-      createdAt: new Date().toISOString(),
-    }
-  ],
-  accounts: [
-    {
-      id: 'acc-1',
-      userId: 'user-demo',
-      name: 'Uang Tunai (Dompet)',
-      type: 'cash',
-      balance: 1250000,
-      icon: 'Wallet',
-      color: '#10B981',
-      isDefault: true,
-    },
-    {
-      id: 'acc-2',
-      userId: 'user-demo',
-      name: 'Bank BCA',
-      type: 'bank',
-      balance: 18500000,
-      icon: 'Building2',
-      color: '#2563EB',
-      accountNumber: '8820194812',
-    },
-    {
-      id: 'acc-3',
-      userId: 'user-demo',
-      name: 'GoPay & OVO',
-      type: 'e-wallet',
-      balance: 850000,
-      icon: 'Smartphone',
-      color: '#06B6D4',
-      accountNumber: '081234567890',
-    },
-    {
-      id: 'acc-4',
-      userId: 'user-demo',
-      name: 'Bibit (Reksadana)',
-      type: 'investment',
-      balance: 25000000,
-      icon: 'TrendingUp',
-      color: '#8B5CF6',
-    },
-  ],
+  users: [],
+  accounts: [],
   categories: [
     { id: 'exp-1', name: 'Makanan & Minuman', type: 'expense', icon: 'Utensils', color: '#EF4444', isDefault: true },
     { id: 'exp-2', name: 'Belanja Bulanan', type: 'expense', icon: 'ShoppingCart', color: '#F97316', isDefault: true },
@@ -95,121 +38,14 @@ const DEFAULT_DB = {
     { id: 'inc-4', name: 'Investasi & Dividen', type: 'income', icon: 'TrendingUp', color: '#6366F1', isDefault: true },
     { id: 'inc-5', name: 'Pemasukan Lainnya', type: 'income', icon: 'PlusCircle', color: '#84CC16', isDefault: true },
   ],
-  transactions: [
-    {
-      id: 'tx-101',
-      userId: 'user-demo',
-      type: 'income',
-      amount: 12000000,
-      categoryId: 'inc-1',
-      accountId: 'acc-2',
-      date: '2026-08-01',
-      time: '09:00',
-      description: 'Gaji Bulanan Agustus 2026',
-      tags: ['Gaji', 'Utama'],
-      createdAt: new Date('2026-08-01T09:00:00').toISOString(),
-    },
-    {
-      id: 'tx-102',
-      userId: 'user-demo',
-      type: 'expense',
-      amount: 450000,
-      categoryId: 'exp-2',
-      accountId: 'acc-2',
-      date: '2026-08-01',
-      time: '14:30',
-      description: 'Belanja Sembako Supermarket',
-      tags: ['Sembako', 'Mingguan'],
-      createdAt: new Date('2026-08-01T14:30:00').toISOString(),
-    },
-    {
-      id: 'tx-103',
-      userId: 'user-demo',
-      type: 'expense',
-      amount: 85000,
-      categoryId: 'exp-1',
-      accountId: 'acc-3',
-      date: '2026-08-01',
-      time: '19:15',
-      description: 'Makan Malam Resto Bersama',
-      tags: ['Kuliner'],
-      createdAt: new Date('2026-08-01T19:15:00').toISOString(),
-    },
-    {
-      id: 'tx-104',
-      userId: 'user-demo',
-      type: 'expense',
-      amount: 150000,
-      categoryId: 'exp-3',
-      accountId: 'acc-3',
-      date: '2026-07-30',
-      time: '08:00',
-      description: 'Isi Bensin Mobil Pertamax',
-      tags: ['Bensin'],
-      createdAt: new Date('2026-07-30T08:00:00').toISOString(),
-    },
-    {
-      id: 'tx-105',
-      userId: 'user-demo',
-      type: 'expense',
-      amount: 750000,
-      categoryId: 'exp-4',
-      accountId: 'acc-2',
-      date: '2026-07-28',
-      time: '10:00',
-      description: 'Tagihan Listrik PLN & Wi-Fi',
-      tags: ['Tagihan'],
-      createdAt: new Date('2026-07-28T10:00:00').toISOString(),
-    },
-    {
-      id: 'tx-106',
-      userId: 'user-demo',
-      type: 'income',
-      amount: 2500000,
-      categoryId: 'inc-2',
-      accountId: 'acc-2',
-      date: '2026-07-25',
-      time: '16:00',
-      description: 'Hasil Penjualan Side Project Website',
-      tags: ['Freelance'],
-      createdAt: new Date('2026-07-25T16:00:00').toISOString(),
-    },
-  ],
-  budgets: [
-    { id: 'bgt-1', userId: 'user-demo', categoryId: 'exp-1', monthlyLimit: 2500000, monthYear: '2026-08' },
-    { id: 'bgt-2', userId: 'user-demo', categoryId: 'exp-2', monthlyLimit: 3000000, monthYear: '2026-08' },
-    { id: 'bgt-3', userId: 'user-demo', categoryId: 'exp-3', monthlyLimit: 1000000, monthYear: '2026-08' },
-    { id: 'bgt-4', userId: 'user-demo', categoryId: 'exp-5', monthlyLimit: 800000, monthYear: '2026-08' },
-  ],
-  goals: [
-    {
-      id: 'goal-1',
-      userId: 'user-demo',
-      title: 'Dana Darurat 6 Bulan',
-      targetAmount: 50000000,
-      currentAmount: 25000000,
-      targetDate: '2026-12-31',
-      category: 'Investasi',
-      icon: 'ShieldAlert',
-      color: '#2563EB',
-    },
-    {
-      id: 'goal-2',
-      userId: 'user-demo',
-      title: 'Beli Laptop Kerja Baru',
-      targetAmount: 18000000,
-      currentAmount: 12000000,
-      targetDate: '2026-10-15',
-      category: 'Elektronik',
-      icon: 'Laptop',
-      color: '#10B981',
-    },
-  ],
+  transactions: [],
+  budgets: [],
+  goals: [],
   reminders: {
     enabled: true,
     time: '20:00',
-    streakDays: 5,
-    lastLoggedDate: '2026-08-01',
+    streakDays: 0,
+    lastLoggedDate: '',
   },
   supabaseConfig: {
     url: '',
@@ -264,17 +100,17 @@ app.get('/api/users', (req, res) => {
 });
 
 app.post('/api/users/login', (req, res) => {
-  const { email, password } = req.body;
+  const { email, name } = req.body;
   const db = readDb();
   const user = db.users.find((u: any) => u.email.toLowerCase() === (email || '').toLowerCase());
 
   if (user) {
+    if (name && !user.name) user.name = name;
     res.json({ success: true, user });
   } else {
-    // Auto register demo
     const newUser = {
       id: 'user-' + Date.now(),
-      name: email.split('@')[0] || 'Pengguna Baru',
+      name: name || (email ? email.split('@')[0] : 'Pengguna Baru'),
       email: email,
       currency: 'IDR',
       darkMode: false,
@@ -288,7 +124,7 @@ app.post('/api/users/login', (req, res) => {
 
 // 3. Transactions
 app.get('/api/transactions', (req, res) => {
-  const userId = (req.query.userId as string) || 'user-demo';
+  const userId = (req.query.userId as string) || '';
   const db = readDb();
   const userTxs = db.transactions.filter((t: any) => t.userId === userId);
   res.json(userTxs);
@@ -368,7 +204,7 @@ app.delete('/api/transactions/:id', (req, res) => {
 
 // 4. Accounts / Wallets
 app.get('/api/accounts', (req, res) => {
-  const userId = (req.query.userId as string) || 'user-demo';
+  const userId = (req.query.userId as string) || '';
   const db = readDb();
   res.json(db.accounts.filter((a: any) => a.userId === userId));
 });
@@ -411,7 +247,7 @@ app.post('/api/accounts/transfer', (req, res) => {
 
   const transferTx = {
     id: 'tx-' + Date.now(),
-    userId: userId || 'user-demo',
+    userId: userId || '',
     type: 'transfer',
     amount: Number(amount),
     categoryId: 'exp-10',
@@ -437,7 +273,7 @@ app.get('/api/categories', (req, res) => {
 
 // 6. Budgets
 app.get('/api/budgets', (req, res) => {
-  const userId = (req.query.userId as string) || 'user-demo';
+  const userId = (req.query.userId as string) || '';
   const db = readDb();
   res.json(db.budgets.filter((b: any) => b.userId === userId));
 });
@@ -465,7 +301,7 @@ app.post('/api/budgets', (req, res) => {
 
 // 7. Goals
 app.get('/api/goals', (req, res) => {
-  const userId = (req.query.userId as string) || 'user-demo';
+  const userId = (req.query.userId as string) || '';
   const db = readDb();
   res.json(db.goals.filter((g: any) => g.userId === userId));
 });

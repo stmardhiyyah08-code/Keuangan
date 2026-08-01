@@ -16,7 +16,7 @@ import { User } from '../types';
 import { formatCurrency } from '../lib/formatters';
 
 interface NavbarProps {
-  currentUser: User;
+  currentUser: User | null;
   users: User[];
   onSwitchUser: (user: User) => void;
   darkMode: boolean;
@@ -134,11 +134,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2 pl-2 pr-2 py-1 rounded-xl bg-gradient-to-r from-slate-100 to-purple-50 dark:from-slate-800 dark:to-purple-950 hover:border-purple-300 dark:hover:border-purple-700 border border-slate-200 dark:border-slate-700 transition"
           >
             <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 text-white font-black text-xs flex items-center justify-center shadow-xs">
-              {currentUser.name.charAt(0).toUpperCase()}
+              {currentUser ? currentUser.name.charAt(0).toUpperCase() : '?'}
             </div>
             <div className="text-left hidden lg:block">
               <div className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">
-                {currentUser.name}
+                {currentUser ? currentUser.name : 'Daftar Akun'}
               </div>
               <div className="text-[10px] font-semibold text-purple-600 dark:text-purple-300">
                 {formatCurrency(totalBalance)}

@@ -22,44 +22,4 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'inc-6', name: 'Pemasukan Lainnya', type: 'income', icon: 'PlusCircle', color: '#84CC16', isDefault: true },
 ];
 
-export const INITIAL_ACCOUNTS: Account[] = [
-  {
-    id: 'acc-1',
-    userId: 'user-demo',
-    name: 'Uang Tunai (Dompet)',
-    type: 'cash',
-    balance: 1250000,
-    icon: 'Wallet',
-    color: '#10B981',
-    isDefault: true,
-  },
-  {
-    id: 'acc-2',
-    userId: 'user-demo',
-    name: 'Bank BCA',
-    type: 'bank',
-    balance: 18500000,
-    icon: 'Building2',
-    color: '#2563EB',
-    accountNumber: '8820194812',
-  },
-  {
-    id: 'acc-3',
-    userId: 'user-demo',
-    name: 'GoPay / OVO',
-    type: 'e-wallet',
-    balance: 850000,
-    icon: 'Smartphone',
-    color: '#06B6D4',
-    accountNumber: '081234567890',
-  },
-  {
-    id: 'acc-4',
-    userId: 'user-demo',
-    name: 'Bibit (Reksadana)',
-    type: 'investment',
-    balance: 25000000,
-    icon: 'TrendingUp',
-    color: '#8B5CF6',
-  },
-];
+export const INITIAL_ACCOUNTS: Account[] = [];

@@ -15,7 +15,7 @@ import {
 import { User as UserType, SupabaseConfig, DailyReminder } from '../types';
 
 interface SettingsViewProps {
-  currentUser: UserType;
+  currentUser: UserType | null;
   darkMode: boolean;
   onToggleDarkMode: () => void;
   supabaseConfig: SupabaseConfig;
@@ -53,13 +53,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold text-lg flex items-center justify-center shadow-md shadow-purple-500/25">
-                {currentUser.name.charAt(0).toUpperCase()}
+                {currentUser ? currentUser.name.charAt(0).toUpperCase() : '?'}
               </div>
               <div>
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                  {currentUser.name}
+                  {currentUser ? currentUser.name : 'Belum Ada Akun'}
                 </h3>
-                <p className="text-xs text-slate-500">{currentUser.email}</p>
+                <p className="text-xs text-slate-500">{currentUser ? currentUser.email : 'Klik ganti akun untuk membuat profil'}</p>
               </div>
             </div>
             <button

@@ -15,7 +15,7 @@ import { Account, AccountType, User } from '../types';
 import { formatCurrency } from '../lib/formatters';
 
 interface WalletsViewProps {
-  currentUser: User;
+  currentUser: User | null;
   accounts: Account[];
   onCreateAccount: (acc: Omit<Account, 'id'>) => void;
   onTransfer: (payload: {

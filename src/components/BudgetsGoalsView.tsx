@@ -17,7 +17,7 @@ import { Budget, FinancialGoal, Category, Transaction, User } from '../types';
 import { formatCurrency, getCurrentMonthYear } from '../lib/formatters';
 
 interface BudgetsGoalsViewProps {
-  currentUser: User;
+  currentUser: User | null;
   budgets: Budget[];
   goals: FinancialGoal[];
   categories: Category[];

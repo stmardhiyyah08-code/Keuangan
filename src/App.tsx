@@ -54,13 +54,9 @@ export default function App() {
 
   // User & Auth State
   const [users, setUsers] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<User>({
-    id: 'user-demo',
-    name: 'Ahmad Rizky',
-    email: 'ahmad.rizky@example.com',
-    currency: 'IDR',
-    darkMode: false,
-    createdAt: new Date().toISOString(),
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('dompetku_current_user');
+    return saved ? JSON.parse(saved) : null;
   });
 
   // App Data States
@@ -72,7 +68,7 @@ export default function App() {
   const [reminder, setReminder] = useState<DailyReminder>({
     enabled: true,
     time: '20:00',
-    streakDays: 5,
+    streakDays: 0,
   });
   const [supabaseConfig, setSupabaseConfigState] = useState<SupabaseConfig>({
     url: '',
@@ -106,22 +102,48 @@ export default function App() {
   }, [darkMode]);
 
   // Load initial app data
-  const loadAppData = async (userId: string) => {
+  const loadAppData = async (targetUser?: User | null) => {
     setIsSyncing(true);
     try {
-      const [uList, txList, accList, catList, bgtList, goalList, remData, spData] =
-        await Promise.all([
-          fetchUsers(),
-          fetchTransactions(userId),
-          fetchAccounts(userId),
+      const uList = await fetchUsers();
+      setUsers(uList);
+
+      let activeUser = targetUser !== undefined ? targetUser : currentUser;
+      if (!activeUser && uList.length > 0) {
+        activeUser = uList[0];
+      }
+
+      if (!activeUser) {
+        setIsUserModalOpen(true);
+        const [catList, remData, spData] = await Promise.all([
           fetchCategories(),
-          fetchBudgets(userId),
-          fetchGoals(userId),
+          fetchReminders(),
+          fetchSupabaseConfig(),
+        ]);
+        setCategories(catList);
+        setReminder(remData);
+        setSupabaseConfigState(spData);
+        setTransactions([]);
+        setAccounts([]);
+        setBudgets([]);
+        setGoals([]);
+        return;
+      }
+
+      setCurrentUser(activeUser);
+      localStorage.setItem('dompetku_current_user', JSON.stringify(activeUser));
+
+      const [txList, accList, catList, bgtList, goalList, remData, spData] =
+        await Promise.all([
+          fetchTransactions(activeUser.id),
+          fetchAccounts(activeUser.id),
+          fetchCategories(),
+          fetchBudgets(activeUser.id),
+          fetchGoals(activeUser.id),
           fetchReminders(),
           fetchSupabaseConfig(),
         ]);
 
-      setUsers(uList);
       setTransactions(txList);
       setAccounts(accList);
       setCategories(catList);
@@ -137,16 +159,18 @@ export default function App() {
   };
 
   useEffect(() => {
-    loadAppData(currentUser.id);
+    loadAppData(currentUser);
 
-    // Setup real-time polling sync interval (every 10 seconds for multi-device sync)
+    // Setup real-time polling sync interval
     const syncInterval = setInterval(() => {
-      fetchTransactions(currentUser.id).then((txs) => setTransactions(txs));
-      fetchAccounts(currentUser.id).then((accs) => setAccounts(accs));
+      if (currentUser?.id) {
+        fetchTransactions(currentUser.id).then((txs) => setTransactions(txs));
+        fetchAccounts(currentUser.id).then((accs) => setAccounts(accs));
+      }
     }, 10000);
 
     return () => clearInterval(syncInterval);
-  }, [currentUser.id]);
+  }, [currentUser?.id]);
 
   // Setup Daily Reminder Scheduler
   useEffect(() => {
@@ -182,7 +206,7 @@ export default function App() {
     try {
       const updated = await updateTransaction(id, updates);
       setTransactions((prev) => prev.map((t) => (t.id === id ? updated : t)));
-      loadAppData(currentUser.id); // Refresh balances
+      loadAppData(currentUser); // Refresh balances
     } catch (err) {
       console.error('Failed to update transaction:', err);
     } finally {
@@ -277,13 +301,13 @@ export default function App() {
   // Handlers for User Switching / Login
   const handleSwitchUser = (user: User) => {
     setCurrentUser(user);
-    loadAppData(user.id);
+    loadAppData(user);
   };
 
-  const handleLoginOrCreate = async (email: string) => {
-    const user = await loginUser(email);
+  const handleLoginOrCreate = async (email: string, name?: string) => {
+    const user = await loginUser(email, name);
     setCurrentUser(user);
-    loadAppData(user.id);
+    loadAppData(user);
   };
 
   // Handlers for Reminders & Supabase
@@ -314,7 +338,7 @@ export default function App() {
         onOpenUserModal={() => setIsUserModalOpen(true)}
         totalBalance={totalBalance}
         isSyncing={isSyncing}
-        onRefreshSync={() => loadAppData(currentUser.id)}
+        onRefreshSync={() => loadAppData(currentUser)}
       />
 
       {/* Main Layout */}

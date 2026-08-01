@@ -24,7 +24,7 @@ import { formatCurrency, formatDateIndonesian, getTodayDateString } from '../lib
 import { exportToCSV, exportToPDFReport } from '../lib/exportUtils';
 
 interface TransactionsViewProps {
-  currentUser: User;
+  currentUser: User | null;
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];

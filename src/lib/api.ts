@@ -17,25 +17,16 @@ export async function fetchUsers(): Promise<User[]> {
     if (!res.ok) throw new Error('Failed to fetch users');
     return await res.json();
   } catch (err) {
-    console.warn('API error, returning mock users:', err);
-    return [
-      {
-        id: 'user-demo',
-        name: 'Ahmad Rizky',
-        email: 'ahmad.rizky@example.com',
-        currency: 'IDR',
-        darkMode: false,
-        createdAt: new Date().toISOString(),
-      },
-    ];
+    console.warn('API error, returning empty users list:', err);
+    return [];
   }
 }
 
-export async function loginUser(email: string): Promise<User> {
+export async function loginUser(email: string, name?: string): Promise<User> {
   const res = await fetch(`${API_BASE}/users/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, name }),
   });
   const data = await res.json();
   return data.user;

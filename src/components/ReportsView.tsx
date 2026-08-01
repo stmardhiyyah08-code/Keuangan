@@ -31,7 +31,7 @@ import { formatCurrency, formatDateIndonesian } from '../lib/formatters';
 import { exportToCSV, exportToPDFReport } from '../lib/exportUtils';
 
 interface ReportsViewProps {
-  currentUser: User;
+  currentUser: User | null;
   transactions: Transaction[];
   categories: Category[];
   accounts: Account[];
