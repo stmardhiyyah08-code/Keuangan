@@ -12,6 +12,7 @@ import { AiAdvisorModal } from './components/AiAdvisorModal';
 import { ReminderSettingsModal } from './components/ReminderSettingsModal';
 import { SupabaseConfigModal } from './components/SupabaseConfigModal';
 import { AuthModal } from './components/AuthModal';
+import { LoginPage } from './components/LoginPage';
 
 import {
   User,
@@ -58,6 +59,7 @@ export default function App() {
     const saved = localStorage.getItem('dompetku_current_user');
     return saved ? JSON.parse(saved) : null;
   });
+  const [isGuestMode, setIsGuestMode] = useState(false);
 
   // App Data States
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -114,7 +116,6 @@ export default function App() {
       }
 
       if (!activeUser) {
-        setIsUserModalOpen(true);
         const [catList, remData, spData] = await Promise.all([
           fetchCategories(),
           fetchReminders(),
@@ -298,17 +299,35 @@ export default function App() {
     }
   };
 
-  // Handlers for User Switching / Login
+  // Handlers for User Switching / Login / Logout
   const handleSwitchUser = (user: User) => {
     setCurrentUser(user);
+    setIsGuestMode(false);
     loadAppData(user);
   };
 
   const handleLoginOrCreate = async (email: string, name?: string) => {
     const user = await loginUser(email, name);
     setCurrentUser(user);
+    setIsGuestMode(false);
     loadAppData(user);
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('dompetku_current_user');
+    setCurrentUser(null);
+    setIsGuestMode(false);
+  };
+
+  // Render Full-page LoginPage if user is not logged in
+  if (!currentUser && !isGuestMode) {
+    return (
+      <LoginPage
+        onLoginOrCreate={handleLoginOrCreate}
+        onContinueAsGuest={() => setIsGuestMode(true)}
+      />
+    );
+  }
 
   // Handlers for Reminders & Supabase
   const handleSaveReminder = async (remData: Partial<DailyReminder>) => {
@@ -425,6 +444,7 @@ export default function App() {
               reminder={reminder}
               onOpenReminders={() => setIsReminderModalOpen(true)}
               onOpenUserModal={() => setIsUserModalOpen(true)}
+              onLogout={handleLogout}
             />
           )}
         </main>

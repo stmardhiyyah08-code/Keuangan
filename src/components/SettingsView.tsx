@@ -11,6 +11,7 @@ import {
   Download,
   Upload,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { User as UserType, SupabaseConfig, DailyReminder } from '../types';
 
@@ -23,6 +24,7 @@ interface SettingsViewProps {
   reminder: DailyReminder;
   onOpenReminders: () => void;
   onOpenUserModal: () => void;
+  onLogout?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -34,6 +36,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   reminder,
   onOpenReminders,
   onOpenUserModal,
+  onLogout,
 }) => {
   return (
     <div className="space-y-6 pb-20 md:pb-6">
@@ -62,12 +65,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <p className="text-xs text-slate-500">{currentUser ? currentUser.email : 'Klik ganti akun untuk membuat profil'}</p>
               </div>
             </div>
-            <button
-              onClick={onOpenUserModal}
-              className="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-xs hover:bg-purple-100 dark:hover:bg-purple-900 transition"
-            >
-              Ganti Akun
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onOpenUserModal}
+                className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-xs hover:bg-purple-100 dark:hover:bg-purple-900 transition"
+              >
+                Profil
+              </button>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  title="Keluar / Logout"
+                  className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-bold text-xs hover:bg-rose-100 dark:hover:bg-rose-900/60 transition flex items-center gap-1"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Keluar</span>
+                </button>
+              )}
+            </div>
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400 border-t border-purple-100/60 dark:border-purple-950/40 pt-3">
             Mata Uang Utama: <strong className="text-slate-800 dark:text-slate-200">Rupiah (IDR - Rp)</strong>
