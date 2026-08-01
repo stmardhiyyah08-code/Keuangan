@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserCheck, Plus, X, Shield, Mail, User as UserIcon, LogIn } from 'lucide-react';
+import { UserCheck, Plus, X, Shield, Mail, User as UserIcon, LogIn, LogOut } from 'lucide-react';
 import { User } from '../types';
 
 interface AuthModalProps {
@@ -9,6 +9,7 @@ interface AuthModalProps {
   currentUser: User | null;
   onSwitchUser: (user: User) => void;
   onLoginOrCreate: (email: string, name?: string) => void;
+  onLogout?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -18,6 +19,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   currentUser,
   onSwitchUser,
   onLoginOrCreate,
+  onLogout,
 }) => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -133,6 +135,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span>{isInitialSetup ? 'Buat Akun & Mulai' : 'Masuk / Buka Profil'}</span>
           </button>
         </form>
+
+        {/* Logout Button */}
+        {onLogout && currentUser && (
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                onLogout();
+                onClose();
+              }}
+              className="w-full py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-extrabold text-xs transition flex items-center justify-center gap-1.5 border border-rose-200 dark:border-rose-900"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Keluar dari Akun (Logout)</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

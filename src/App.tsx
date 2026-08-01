@@ -59,7 +59,6 @@ export default function App() {
     const saved = localStorage.getItem('dompetku_current_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [isGuestMode, setIsGuestMode] = useState(false);
 
   // App Data States
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -111,9 +110,6 @@ export default function App() {
       setUsers(uList);
 
       let activeUser = targetUser !== undefined ? targetUser : currentUser;
-      if (!activeUser && uList.length > 0) {
-        activeUser = uList[0];
-      }
 
       if (!activeUser) {
         const [catList, remData, spData] = await Promise.all([
@@ -302,29 +298,29 @@ export default function App() {
   // Handlers for User Switching / Login / Logout
   const handleSwitchUser = (user: User) => {
     setCurrentUser(user);
-    setIsGuestMode(false);
     loadAppData(user);
   };
 
   const handleLoginOrCreate = async (email: string, name?: string) => {
     const user = await loginUser(email, name);
     setCurrentUser(user);
-    setIsGuestMode(false);
     loadAppData(user);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('dompetku_current_user');
     setCurrentUser(null);
-    setIsGuestMode(false);
+    setTransactions([]);
+    setAccounts([]);
+    setBudgets([]);
+    setGoals([]);
   };
 
   // Render Full-page LoginPage if user is not logged in
-  if (!currentUser && !isGuestMode) {
+  if (!currentUser) {
     return (
       <LoginPage
         onLoginOrCreate={handleLoginOrCreate}
-        onContinueAsGuest={() => setIsGuestMode(true)}
       />
     );
   }
@@ -491,6 +487,7 @@ export default function App() {
         currentUser={currentUser}
         onSwitchUser={handleSwitchUser}
         onLoginOrCreate={handleLoginOrCreate}
+        onLogout={handleLogout}
       />
     </div>
   );
