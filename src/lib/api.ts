@@ -348,33 +348,39 @@ export async function saveReminders(reminder: Partial<DailyReminder>): Promise<D
 }
 
 export async function fetchSupabaseConfig(): Promise<SupabaseConfig> {
-  try {
-    const res = await fetch(`${API_BASE}/supabase-config`);
-    return await safeJsonParse<SupabaseConfig>(res, { url: '', anonKey: '', isConnected: false });
-  } catch (err) {
-    return { url: '', anonKey: '', isConnected: false };
+  const env = (import.meta as any).env || {};
+  const saved = localStorage.getItem('dompetku_supabase_config');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      return {
+        url: parsed.url || '',
+        anonKey: parsed.anonKey || '',
+        isConnected: Boolean(parsed.url && parsed.anonKey),
+        lastSyncedAt: parsed.lastSyncedAt || new Date().toISOString(),
+      };
+    } catch {}
   }
+
+  const envUrl = env.VITE_SUPABASE_URL || '';
+  const envKey = env.VITE_SUPABASE_ANON_KEY || '';
+  return {
+    url: envUrl,
+    anonKey: envKey,
+    isConnected: Boolean(envUrl && envKey && envUrl !== 'https://your-project-id.supabase.co'),
+    lastSyncedAt: new Date().toISOString(),
+  };
 }
 
 export async function saveSupabaseConfig(config: { url: string; anonKey: string }): Promise<SupabaseConfig> {
-  const defaultConfig: SupabaseConfig = { url: config.url, anonKey: config.anonKey, isConnected: Boolean(config.url && config.anonKey) };
-  try {
-    const res = await fetch(`${API_BASE}/supabase-config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(config),
-    });
-    if (res.ok) {
-      const text = await res.text();
-      if (text && text.trim()) {
-        const data = JSON.parse(text);
-        if (data.supabaseConfig) return data.supabaseConfig;
-      }
-    }
-  } catch (err) {
-    console.warn('Error saving Supabase config:', err);
-  }
-  return defaultConfig;
+  const updated: SupabaseConfig = {
+    url: config.url.trim(),
+    anonKey: config.anonKey.trim(),
+    isConnected: Boolean(config.url.trim() && config.anonKey.trim()),
+    lastSyncedAt: new Date().toISOString(),
+  };
+  localStorage.setItem('dompetku_supabase_config', JSON.stringify(updated));
+  return updated;
 }
 
 export async function askGeminiAdvisor(payload: {

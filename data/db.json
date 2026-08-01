@@ -131,11 +131,5 @@
     "time": "20:00",
     "streakDays": 0,
     "lastLoggedDate": ""
-  },
-  "supabaseConfig": {
-    "url": "",
-    "anonKey": "",
-    "isConnected": false,
-    "lastSyncedAt": "2026-08-01T11:42:00.000Z"
   }
 }

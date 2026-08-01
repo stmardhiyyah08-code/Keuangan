@@ -46,12 +46,6 @@ const DEFAULT_DB = {
     time: '20:00',
     streakDays: 0,
     lastLoggedDate: '',
-  },
-  supabaseConfig: {
-    url: '',
-    anonKey: '',
-    isConnected: false,
-    lastSyncedAt: new Date().toISOString(),
   }
 };
 
@@ -85,11 +79,10 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/sync/status', (req, res) => {
-  const db = readDb();
   res.json({
     synced: true,
     lastSyncedAt: new Date().toISOString(),
-    supabaseConnected: db.supabaseConfig?.isConnected || false,
+    supabaseConnected: Boolean(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL),
   });
 });
 
@@ -340,23 +333,15 @@ app.put('/api/reminders', (req, res) => {
   res.json({ success: true, reminders: db.reminders });
 });
 
-// 9. Supabase Config
+// 9. Supabase Config (Check status from env variables if provided)
 app.get('/api/supabase-config', (req, res) => {
-  const db = readDb();
-  res.json(db.supabaseConfig || { url: '', anonKey: '', isConnected: false });
-});
-
-app.post('/api/supabase-config', (req, res) => {
-  const { url, anonKey } = req.body;
-  const db = readDb();
-  db.supabaseConfig = {
-    url,
-    anonKey,
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+  res.json({
+    url: url ? '********' : '',
+    anonKey: anonKey ? '********' : '',
     isConnected: Boolean(url && anonKey),
-    lastSyncedAt: new Date().toISOString(),
-  };
-  writeDb(db);
-  res.json({ success: true, supabaseConfig: db.supabaseConfig });
+  });
 });
 
 // 10. Gemini AI Financial Advisor & Receipt Scanner Endpoint

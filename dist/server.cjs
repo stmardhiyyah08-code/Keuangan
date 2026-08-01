@@ -63,12 +63,6 @@ var DEFAULT_DB = {
     time: "20:00",
     streakDays: 0,
     lastLoggedDate: ""
-  },
-  supabaseConfig: {
-    url: "",
-    anonKey: "",
-    isConnected: false,
-    lastSyncedAt: (/* @__PURE__ */ new Date()).toISOString()
   }
 };
 function readDb() {
@@ -95,11 +89,10 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", time: (/* @__PURE__ */ new Date()).toISOString() });
 });
 app.get("/api/sync/status", (req, res) => {
-  const db = readDb();
   res.json({
     synced: true,
     lastSyncedAt: (/* @__PURE__ */ new Date()).toISOString(),
-    supabaseConnected: db.supabaseConfig?.isConnected || false
+    supabaseConnected: Boolean(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)
   });
 });
 app.get("/api/users", (req, res) => {
@@ -308,20 +301,13 @@ app.put("/api/reminders", (req, res) => {
   res.json({ success: true, reminders: db.reminders });
 });
 app.get("/api/supabase-config", (req, res) => {
-  const db = readDb();
-  res.json(db.supabaseConfig || { url: "", anonKey: "", isConnected: false });
-});
-app.post("/api/supabase-config", (req, res) => {
-  const { url, anonKey } = req.body;
-  const db = readDb();
-  db.supabaseConfig = {
-    url,
-    anonKey,
-    isConnected: Boolean(url && anonKey),
-    lastSyncedAt: (/* @__PURE__ */ new Date()).toISOString()
-  };
-  writeDb(db);
-  res.json({ success: true, supabaseConfig: db.supabaseConfig });
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+  res.json({
+    url: url ? "********" : "",
+    anonKey: anonKey ? "********" : "",
+    isConnected: Boolean(url && anonKey)
+  });
 });
 app.post("/api/ai/advisor", async (req, res) => {
   try {
