@@ -1,5 +1,5 @@
 -- ====================================================================
--- SKEMA DATABASE POSTGRESQL / SUPABASE UNTUK APLIKASI DOMPETKU
+-- SKEMA DATABASE POSTGRESQL / SUPABASE UNTUK APLIKASI DOMPETKU (MANDIRI)
 -- Dokumentasi: https://supabase.com/docs/guides/database/tables
 -- ====================================================================
 
@@ -19,6 +19,33 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Trigger Otomatis: Buat Profil saat Pengguna mendaftar melalui Supabase Auth
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, name)
+  VALUES (
+    NEW.id::text,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1))
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET email = EXCLUDED.email,
+      name = COALESCE(EXCLUDED.name, public.profiles.name);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Pasang trigger pada tabel auth.users jika berjalan di lingkungan Supabase
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'auth' AND tablename = 'users') THEN
+    CREATE OR REPLACE TRIGGER on_auth_user_created
+      AFTER INSERT ON auth.users
+      FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+  END IF;
+END $$;
 
 -- ====================================================================
 -- 3. TABEL DOMPET & REKENING (ACCOUNTS)
@@ -41,8 +68,8 @@ CREATE TABLE IF NOT EXISTS public.accounts (
 -- 4. TABEL KATEGORI TRANSAKSI (CATEGORIES)
 -- ====================================================================
 CREATE TABLE IF NOT EXISTS public.categories (
-    id TEXT PRIMARY KEY,
-    user_id TEXT REFERENCES public.profiles(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT ('cat-' || extract(epoch from now())::bigint || '-' || floor(random() * 1000)::text),
+    user_id TEXT REFERENCES public.profiles(id) ON DELETE CASCADE, -- NULL untuk kategori bawaan global
     name TEXT NOT NULL,
     type TEXT NOT NULL CHECK (type IN ('expense', 'income')),
     icon TEXT DEFAULT 'Tag',
@@ -152,13 +179,29 @@ ALTER TABLE public.budgets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reminders ENABLE ROW LEVEL SECURITY;
 
--- Kebijakan RLS (Public Allowed for Demo/Self-hosted API or Auth UID matching)
+-- Kebijakan RLS Kompatibel (Anon / Authenticated User)
+DROP POLICY IF EXISTS "Public Read Categories" ON public.categories;
 CREATE POLICY "Public Read Categories" ON public.categories FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Categories User Write" ON public.categories;
+CREATE POLICY "Categories User Write" ON public.categories FOR ALL USING (user_id IS NULL OR user_id = (SELECT auth.uid()::text));
+
+DROP POLICY IF EXISTS "Profiles Full Access" ON public.profiles;
 CREATE POLICY "Profiles Full Access" ON public.profiles FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Accounts Full Access" ON public.accounts;
 CREATE POLICY "Accounts Full Access" ON public.accounts FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Transactions Full Access" ON public.transactions;
 CREATE POLICY "Transactions Full Access" ON public.transactions FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Budgets Full Access" ON public.budgets;
 CREATE POLICY "Budgets Full Access" ON public.budgets FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Goals Full Access" ON public.goals;
 CREATE POLICY "Goals Full Access" ON public.goals FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Reminders Full Access" ON public.reminders;
 CREATE POLICY "Reminders Full Access" ON public.reminders FOR ALL USING (true);
 
 -- ====================================================================

@@ -8,6 +8,7 @@ import {
   DailyReminder,
   SupabaseConfig,
 } from '../types';
+import { getSupabaseClient } from './supabase';
 
 const API_BASE = '/api';
 
@@ -23,7 +24,29 @@ async function safeJsonParse<T>(res: Response, fallback: T): Promise<T> {
   }
 }
 
+// --------------------------------------------------------------------
+// 1. USER & AUTHENTICATION
+// --------------------------------------------------------------------
 export async function fetchUsers(): Promise<User[]> {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (!error && data) {
+        return data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          currency: p.currency || 'IDR',
+          darkMode: p.dark_mode || false,
+          createdAt: p.created_at,
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase fetchUsers error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/users`);
     return await safeJsonParse<User[]>(res, []);
@@ -34,130 +57,149 @@ export async function fetchUsers(): Promise<User[]> {
 }
 
 export async function loginUser(email: string, name?: string): Promise<User> {
+  const cleanEmail = email.trim().toLowerCase();
+  const displayName = name ? name.trim() : cleanEmail.split('@')[0];
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', cleanEmail)
+        .single();
+
+      if (existing) {
+        return {
+          id: existing.id,
+          name: existing.name,
+          email: existing.email,
+          currency: existing.currency || 'IDR',
+          darkMode: existing.dark_mode || false,
+          createdAt: existing.created_at,
+        };
+      }
+
+      const newId = 'user-' + Date.now();
+      const { data: created, error } = await supabase
+        .from('profiles')
+        .insert([{ id: newId, email: cleanEmail, name: displayName, currency: 'IDR' }])
+        .select()
+        .single();
+
+      if (!error && created) {
+        return {
+          id: created.id,
+          name: created.name,
+          email: created.email,
+          currency: created.currency || 'IDR',
+          darkMode: created.dark_mode || false,
+          createdAt: created.created_at,
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase loginUser failed, fallback to local:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/users/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name }),
+      body: JSON.stringify({ email: cleanEmail, name: displayName }),
     });
-    
-    if (!res.ok) {
-      throw new Error(`Server error (${res.status})`);
-    }
 
-    const text = await res.text();
-    if (!text || !text.trim()) {
-      throw new Error('Server mengembalikan respon kosong.');
+    if (res.ok) {
+      const text = await res.text();
+      if (text && text.trim()) {
+        const data = JSON.parse(text);
+        if (data && data.user) return data.user;
+      }
     }
-
-    const data = JSON.parse(text);
-    if (!data || !data.user) {
-      throw new Error('Format data user dari server tidak valid.');
-    }
-    return data.user;
-  } catch (err: any) {
-    console.warn('Login server failed, generating local session:', err);
-    // Fallback local session if server API is unavailable
-    const fallbackUser: User = {
-      id: 'user-' + Date.now(),
-      name: name || (email ? email.split('@')[0] : 'Pengguna'),
-      email: email,
-      currency: 'IDR',
-      darkMode: false,
-      createdAt: new Date().toISOString(),
-    };
-    return fallbackUser;
-  }
-}
-
-export async function fetchTransactions(userId: string): Promise<Transaction[]> {
-  if (!userId) return [];
-  try {
-    const res = await fetch(`${API_BASE}/transactions?userId=${encodeURIComponent(userId)}`);
-    return await safeJsonParse<Transaction[]>(res, []);
   } catch (err) {
-    console.warn('Error fetching transactions:', err);
-    return [];
+    console.warn('Login server failed, generating local session:', err);
   }
-}
 
-export async function createTransaction(
-  tx: Omit<Transaction, 'id' | 'createdAt'>
-): Promise<{ transaction: Transaction; accounts: Account[] }> {
-  const localTx: Transaction = {
-    ...tx,
-    id: 'tx-' + Date.now(),
+  return {
+    id: 'user-' + Date.now(),
+    name: displayName,
+    email: cleanEmail,
+    currency: 'IDR',
+    darkMode: false,
     createdAt: new Date().toISOString(),
   };
-
-  try {
-    const res = await fetch(`${API_BASE}/transactions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(tx),
-    });
-    
-    if (res.ok) {
-      const text = await res.text();
-      if (text && text.trim()) {
-        const data = JSON.parse(text);
-        if (data.transaction) return data;
-      }
-    }
-  } catch (err) {
-    console.warn('Network error on createTransaction, using local state:', err);
-  }
-
-  return { transaction: localTx, accounts: [] };
 }
 
-export async function updateTransaction(
-  id: string,
-  updates: Partial<Transaction>
-): Promise<Transaction> {
-  try {
-    const res = await fetch(`${API_BASE}/transactions/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
-
-    if (res.ok) {
-      const text = await res.text();
-      if (text && text.trim()) {
-        const data = JSON.parse(text);
-        if (data.transaction) return data.transaction;
-      }
-    }
-  } catch (err) {
-    console.warn('Error updating transaction:', err);
-  }
-
-  return { id, ...updates } as Transaction;
-}
-
-export async function deleteTransaction(id: string): Promise<{ accounts: Account[] }> {
-  try {
-    const res = await fetch(`${API_BASE}/transactions/${id}`, {
-      method: 'DELETE',
-    });
-    if (res.ok) {
-      const text = await res.text();
-      if (text && text.trim()) {
-        return JSON.parse(text);
-      }
-    }
-  } catch (err) {
-    console.warn('Error deleting transaction:', err);
-  }
-  return { accounts: [] };
-}
-
+// --------------------------------------------------------------------
+// 2. ACCOUNTS / WALLETS
+// --------------------------------------------------------------------
 export async function fetchAccounts(userId: string): Promise<Account[]> {
   if (!userId) return [];
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (!error && data) {
+        let mapped = data.map((a: any) => ({
+          id: a.id,
+          userId: a.user_id,
+          name: a.name,
+          type: a.type,
+          balance: Number(a.balance),
+          accountNumber: a.account_number,
+          icon: a.icon,
+          color: a.color,
+          isDefault: a.is_default,
+        }));
+
+        if (mapped.length === 0) {
+          // Initialize default initial accounts for new user in Supabase
+          const initAccs = [
+            { id: 'acc-1-' + Date.now(), user_id: userId, name: 'Uang Tunai (Dompet)', type: 'cash', balance: 0, icon: 'Wallet', color: '#10B981', is_default: true },
+            { id: 'acc-2-' + Date.now(), user_id: userId, name: 'Bank BCA', type: 'bank', balance: 0, icon: 'Building2', color: '#2563EB' }
+          ];
+          await supabase.from('accounts').insert(initAccs);
+          return initAccs.map((a) => ({
+            id: a.id,
+            userId: a.user_id,
+            name: a.name,
+            type: a.type as any,
+            balance: a.balance,
+            icon: a.icon,
+            color: a.color,
+            isDefault: a.is_default,
+          }));
+        }
+
+        return mapped;
+      }
+    } catch (e) {
+      console.warn('Supabase fetchAccounts error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/accounts?userId=${encodeURIComponent(userId)}`);
-    return await safeJsonParse<Account[]>(res, []);
+    const accs = await safeJsonParse<Account[]>(res, []);
+    if (accs.length === 0) {
+      // Auto-create initial default account for new local user
+      const defaultAcc = await createAccount({
+        userId,
+        name: 'Uang Tunai (Dompet)',
+        type: 'cash',
+        balance: 0,
+        icon: 'Wallet',
+        color: '#10B981',
+        isDefault: true,
+      });
+      return [defaultAcc];
+    }
+    return accs;
   } catch (err) {
     console.warn('Error fetching accounts:', err);
     return [];
@@ -165,7 +207,46 @@ export async function fetchAccounts(userId: string): Promise<Account[]> {
 }
 
 export async function createAccount(acc: Omit<Account, 'id'>): Promise<Account> {
-  const localAcc: Account = { ...acc, id: 'acc-' + Date.now() };
+  const newId = 'acc-' + Date.now();
+  const localAcc: Account = { ...acc, id: newId };
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .insert([{
+          id: newId,
+          user_id: acc.userId,
+          name: acc.name,
+          type: acc.type,
+          balance: acc.balance,
+          account_number: acc.accountNumber,
+          icon: acc.icon,
+          color: acc.color,
+          is_default: acc.isDefault,
+        }])
+        .select()
+        .single();
+
+      if (!error && data) {
+        return {
+          id: data.id,
+          userId: data.user_id,
+          name: data.name,
+          type: data.type,
+          balance: Number(data.balance),
+          accountNumber: data.account_number,
+          icon: data.icon,
+          color: data.color,
+          isDefault: data.is_default,
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase createAccount error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/accounts`, {
       method: 'POST',
@@ -227,7 +308,242 @@ export async function transferBetweenAccounts(payload: {
   return { transaction: localTx, accounts: [] };
 }
 
+// --------------------------------------------------------------------
+// 3. TRANSACTIONS
+// --------------------------------------------------------------------
+export async function fetchTransactions(userId: string): Promise<Transaction[]> {
+  if (!userId) return [];
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false });
+
+      if (!error && data) {
+        return data.map((t: any) => ({
+          id: t.id,
+          userId: t.user_id,
+          accountId: t.account_id,
+          targetAccountId: t.target_account_id,
+          categoryId: t.category_id,
+          type: t.type,
+          amount: Number(t.amount),
+          date: t.date,
+          time: t.time,
+          description: t.description,
+          tags: t.tags || [],
+          createdAt: t.created_at,
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase fetchTransactions error:', e);
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/transactions?userId=${encodeURIComponent(userId)}`);
+    return await safeJsonParse<Transaction[]>(res, []);
+  } catch (err) {
+    console.warn('Error fetching transactions:', err);
+    return [];
+  }
+}
+
+export async function createTransaction(
+  tx: Omit<Transaction, 'id' | 'createdAt'>
+): Promise<{ transaction: Transaction; accounts: Account[] }> {
+  const newId = 'tx-' + Date.now();
+  const localTx: Transaction = {
+    ...tx,
+    id: newId,
+    createdAt: new Date().toISOString(),
+  };
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([{
+          id: newId,
+          user_id: tx.userId,
+          account_id: tx.accountId,
+          target_account_id: tx.targetAccountId,
+          category_id: tx.categoryId,
+          type: tx.type,
+          amount: tx.amount,
+          date: tx.date,
+          time: tx.time,
+          description: tx.description,
+          tags: tx.tags,
+        }])
+        .select()
+        .single();
+
+      if (!error && data) {
+        // Fetch updated accounts
+        const updatedAccounts = await fetchAccounts(tx.userId);
+        return {
+          transaction: {
+            id: data.id,
+            userId: data.user_id,
+            accountId: data.account_id,
+            targetAccountId: data.target_account_id,
+            categoryId: data.category_id,
+            type: data.type,
+            amount: Number(data.amount),
+            date: data.date,
+            time: data.time,
+            description: data.description,
+            tags: data.tags || [],
+            createdAt: data.created_at,
+          },
+          accounts: updatedAccounts,
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase createTransaction error:', e);
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/transactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tx),
+    });
+
+    if (res.ok) {
+      const text = await res.text();
+      if (text && text.trim()) {
+        const data = JSON.parse(text);
+        if (data.transaction) return data;
+      }
+    }
+  } catch (err) {
+    console.warn('Network error on createTransaction, using local state:', err);
+  }
+
+  return { transaction: localTx, accounts: [] };
+}
+
+export async function updateTransaction(
+  id: string,
+  updates: Partial<Transaction>
+): Promise<Transaction> {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const dbUpdates: any = {};
+      if (updates.amount !== undefined) dbUpdates.amount = updates.amount;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.date !== undefined) dbUpdates.date = updates.date;
+      if (updates.categoryId !== undefined) dbUpdates.category_id = updates.categoryId;
+      if (updates.accountId !== undefined) dbUpdates.account_id = updates.accountId;
+
+      const { data, error } = await supabase
+        .from('transactions')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (!error && data) {
+        return {
+          id: data.id,
+          userId: data.user_id,
+          accountId: data.account_id,
+          targetAccountId: data.target_account_id,
+          categoryId: data.category_id,
+          type: data.type,
+          amount: Number(data.amount),
+          date: data.date,
+          time: data.time,
+          description: data.description,
+          tags: data.tags || [],
+          createdAt: data.created_at,
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase updateTransaction error:', e);
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/transactions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+
+    if (res.ok) {
+      const text = await res.text();
+      if (text && text.trim()) {
+        const data = JSON.parse(text);
+        if (data.transaction) return data.transaction;
+      }
+    }
+  } catch (err) {
+    console.warn('Error updating transaction:', err);
+  }
+
+  return { id, ...updates } as Transaction;
+}
+
+export async function deleteTransaction(id: string): Promise<{ accounts: Account[] }> {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await supabase.from('transactions').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Supabase deleteTransaction error:', e);
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/transactions/${id}`, {
+      method: 'DELETE',
+    });
+    if (res.ok) {
+      const text = await res.text();
+      if (text && text.trim()) {
+        return JSON.parse(text);
+      }
+    }
+  } catch (err) {
+    console.warn('Error deleting transaction:', err);
+  }
+  return { accounts: [] };
+}
+
+// --------------------------------------------------------------------
+// 4. CATEGORIES
+// --------------------------------------------------------------------
 export async function fetchCategories(): Promise<Category[]> {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (!error && data && data.length > 0) {
+        return data.map((c: any) => ({
+          id: c.id,
+          userId: c.user_id,
+          name: c.name,
+          type: c.type,
+          icon: c.icon,
+          color: c.color,
+          isDefault: c.is_default,
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase fetchCategories error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/categories`);
     return await safeJsonParse<Category[]>(res, []);
@@ -236,8 +552,34 @@ export async function fetchCategories(): Promise<Category[]> {
   }
 }
 
+// --------------------------------------------------------------------
+// 5. BUDGETS
+// --------------------------------------------------------------------
 export async function fetchBudgets(userId: string): Promise<Budget[]> {
   if (!userId) return [];
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (!error && data) {
+        return data.map((b: any) => ({
+          id: b.id,
+          userId: b.user_id,
+          categoryId: b.category_id,
+          monthlyLimit: Number(b.monthly_limit),
+          monthYear: b.month_year,
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase fetchBudgets error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/budgets?userId=${encodeURIComponent(userId)}`);
     return await safeJsonParse<Budget[]>(res, []);
@@ -247,6 +589,23 @@ export async function fetchBudgets(userId: string): Promise<Budget[]> {
 }
 
 export async function saveBudget(budget: Omit<Budget, 'id'>): Promise<Budget[]> {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const newId = 'bgt-' + Date.now();
+      await supabase.from('budgets').upsert([{
+        id: newId,
+        user_id: budget.userId,
+        category_id: budget.categoryId,
+        monthly_limit: budget.monthlyLimit,
+        month_year: budget.monthYear,
+      }]);
+      return await fetchBudgets(budget.userId);
+    } catch (e) {
+      console.warn('Supabase saveBudget error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/budgets`, {
       method: 'POST',
@@ -266,8 +625,38 @@ export async function saveBudget(budget: Omit<Budget, 'id'>): Promise<Budget[]> 
   return [];
 }
 
+// --------------------------------------------------------------------
+// 6. GOALS
+// --------------------------------------------------------------------
 export async function fetchGoals(userId: string): Promise<FinancialGoal[]> {
   if (!userId) return [];
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (!error && data) {
+        return data.map((g: any) => ({
+          id: g.id,
+          userId: g.user_id,
+          title: g.title,
+          targetAmount: Number(g.target_amount),
+          currentAmount: Number(g.current_amount),
+          targetDate: g.target_date,
+          category: g.category,
+          icon: g.icon,
+          color: g.color,
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase fetchGoals error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/goals?userId=${encodeURIComponent(userId)}`);
     return await safeJsonParse<FinancialGoal[]>(res, []);
@@ -277,7 +666,46 @@ export async function fetchGoals(userId: string): Promise<FinancialGoal[]> {
 }
 
 export async function createGoal(goal: Omit<FinancialGoal, 'id'>): Promise<FinancialGoal> {
-  const localGoal: FinancialGoal = { ...goal, id: 'goal-' + Date.now() };
+  const newId = 'goal-' + Date.now();
+  const localGoal: FinancialGoal = { ...goal, id: newId };
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('goals')
+        .insert([{
+          id: newId,
+          user_id: goal.userId,
+          title: goal.title,
+          target_amount: goal.targetAmount,
+          current_amount: goal.currentAmount,
+          target_date: goal.targetDate,
+          category: goal.category,
+          icon: goal.icon,
+          color: goal.color,
+        }])
+        .select()
+        .single();
+
+      if (!error && data) {
+        return {
+          id: data.id,
+          userId: data.user_id,
+          title: data.title,
+          targetAmount: Number(data.target_amount),
+          currentAmount: Number(data.current_amount),
+          targetDate: data.target_date,
+          category: data.category,
+          icon: data.icon,
+          color: data.color,
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase createGoal error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/goals`, {
       method: 'POST',
@@ -298,6 +726,39 @@ export async function createGoal(goal: Omit<FinancialGoal, 'id'>): Promise<Finan
 }
 
 export async function updateGoal(id: string, updates: Partial<FinancialGoal>): Promise<FinancialGoal> {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const dbUpdates: any = {};
+      if (updates.currentAmount !== undefined) dbUpdates.current_amount = updates.currentAmount;
+      if (updates.targetAmount !== undefined) dbUpdates.target_amount = updates.targetAmount;
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+
+      const { data, error } = await supabase
+        .from('goals')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (!error && data) {
+        return {
+          id: data.id,
+          userId: data.user_id,
+          title: data.title,
+          targetAmount: Number(data.target_amount),
+          currentAmount: Number(data.current_amount),
+          targetDate: data.target_date,
+          category: data.category,
+          icon: data.icon,
+          color: data.color,
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase updateGoal error:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/goals/${id}`, {
       method: 'PUT',
@@ -317,6 +778,9 @@ export async function updateGoal(id: string, updates: Partial<FinancialGoal>): P
   return { id, ...updates } as FinancialGoal;
 }
 
+// --------------------------------------------------------------------
+// 7. REMINDERS & CONFIG
+// --------------------------------------------------------------------
 export async function fetchReminders(): Promise<DailyReminder> {
   try {
     const res = await fetch(`${API_BASE}/reminders`);
