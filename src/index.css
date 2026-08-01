@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .bg-vibrant-gradient {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  }
+
+  .bg-vibrant-gradient-alt {
+    background: linear-gradient(135deg, #0ea5e9 0%, #22c55e 50%, #eab308 100%);
+  }
+
+  .bg-vibrant-card {
+    background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 70%),
+                radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.08), transparent 70%);
+  }
+
+  .border-vibrant-glow {
+    border-color: rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+  }
+
+  .glass-vibrant {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+  }
+
+  .dark .glass-vibrant {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+

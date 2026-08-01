@@ -1,0 +1,6 @@
+{
+  "name": "Dompetku - Keuangan & Laporan",
+  "description": "Aplikasi pengelola keuangan pribadi dan bisnis lengkap dengan autentikasi multi-user, grafik laporan intuitif, ekspor CSV/PDF, pengingat harian, mode gelap, dan analisis AI.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
