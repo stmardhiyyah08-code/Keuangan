@@ -22,6 +22,7 @@ import {
 import { Transaction, Account, Category, FilterState, User } from '../types';
 import { formatCurrency, formatDateIndonesian, getTodayDateString } from '../lib/formatters';
 import { exportToCSV, exportToPDFReport } from '../lib/exportUtils';
+import { DEFAULT_CATEGORIES } from '../lib/constants';
 
 interface TransactionsViewProps {
   currentUser: User | null;
@@ -44,7 +45,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   onDeleteTransaction,
   onOpenAiScanReceipt,
 }) => {
-  const categoryMap = new Map(categories.map((c) => [c.id, c]));
+  const effectiveCategories = categories && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+  const categoryMap = new Map(effectiveCategories.map((c) => [c.id, c]));
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
 
   // Filters State
@@ -83,7 +85,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     setEditingTx(null);
     setType('expense');
     setAmount('');
-    setCategoryId('exp-1');
+    const defaultCat = effectiveCategories.find((c) => c.type === 'expense')?.id || 'exp-1';
+    setCategoryId(defaultCat);
     setAccountId(accounts[0]?.id || '');
     setTargetAccountId(accounts[1]?.id || '');
     setDate(getTodayDateString());
@@ -91,6 +94,18 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     setDescription('');
     setTagsInput('');
     setReceiptUrl('');
+  };
+
+  const handleTypeChange = (newType: 'expense' | 'income' | 'transfer') => {
+    setType(newType);
+    if (newType !== 'transfer') {
+      const validCats = effectiveCategories.filter(
+        (c) => c.type === (newType === 'income' ? 'income' : 'expense')
+      );
+      if (validCats.length > 0) {
+        setCategoryId(validCats[0].id);
+      }
+    }
   };
 
   const handleOpenNew = () => {
@@ -478,7 +493,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setType(t)}
+                    onClick={() => handleTypeChange(t)}
                     className={`py-2 rounded-xl text-xs font-bold capitalize transition ${
                       type === t
                         ? t === 'expense'
@@ -522,7 +537,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       onChange={(e) => setCategoryId(e.target.value)}
                       className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"
                     >
-                      {categories
+                      {effectiveCategories
                         .filter((c) => c.type === (type === 'income' ? 'income' : 'expense'))
                         .map((c) => (
                           <option key={c.id} value={c.id}>

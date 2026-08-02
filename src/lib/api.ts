@@ -9,6 +9,7 @@ import {
   SupabaseConfig,
 } from '../types';
 import { getSupabaseClient } from './supabase';
+import { DEFAULT_CATEGORIES } from './constants';
 
 const API_BASE = '/api';
 
@@ -546,10 +547,13 @@ export async function fetchCategories(): Promise<Category[]> {
 
   try {
     const res = await fetch(`${API_BASE}/categories`);
-    return await safeJsonParse<Category[]>(res, []);
+    const list = await safeJsonParse<Category[]>(res, []);
+    if (list && list.length > 0) return list;
   } catch (err) {
-    return [];
+    console.warn('Error fetching categories from API:', err);
   }
+
+  return DEFAULT_CATEGORIES;
 }
 
 // --------------------------------------------------------------------
