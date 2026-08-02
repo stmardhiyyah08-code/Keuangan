@@ -37,7 +37,6 @@ interface DashboardViewProps {
   categories: Category[];
   budgets: Budget[];
   onOpenNewTransaction: () => void;
-  onOpenAiAdvisor: () => void;
   onSelectTab: (tab: any) => void;
 }
 
@@ -48,7 +47,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   categories,
   budgets,
   onOpenNewTransaction,
-  onOpenAiAdvisor,
   onSelectTab,
 }) => {
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
@@ -170,13 +168,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={onOpenAiAdvisor}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-bold text-xs sm:text-sm transition shadow-sm hover:scale-105 active:scale-95"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-              <span>Analisis AI</span>
-            </button>
             <button
               onClick={onOpenNewTransaction}
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-500 hover:to-emerald-600 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-teal-500/30 active:scale-95 hover:scale-105 transition"

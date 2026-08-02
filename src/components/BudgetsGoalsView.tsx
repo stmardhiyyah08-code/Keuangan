@@ -71,7 +71,7 @@ export const BudgetsGoalsView: React.FC<BudgetsGoalsViewProps> = ({
     if (!limit || limit <= 0) return;
 
     onSaveBudget({
-      userId: currentUser.id,
+      userId: currentUser?.id || '',
       categoryId: selectedCatId,
       monthlyLimit: limit,
       monthYear: currentMonthYear,
@@ -87,7 +87,7 @@ export const BudgetsGoalsView: React.FC<BudgetsGoalsViewProps> = ({
     if (!target || !goalTitle) return;
 
     onCreateGoal({
-      userId: currentUser.id,
+      userId: currentUser?.id || '',
       title: goalTitle,
       targetAmount: target,
       currentAmount: parseFloat(goalCurrentAmount) || 0,
@@ -348,8 +348,8 @@ export const BudgetsGoalsView: React.FC<BudgetsGoalsViewProps> = ({
 
       {/* Modal Add Budget */}
       {isBudgetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">
                 Atur Batas Anggaran Kategori
@@ -419,8 +419,8 @@ export const BudgetsGoalsView: React.FC<BudgetsGoalsViewProps> = ({
 
       {/* Modal Add Goal */}
       {isGoalModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">
                 Buat Target Tabungan Baru

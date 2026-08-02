@@ -23,7 +23,6 @@ interface NavbarProps {
   onToggleDarkMode: () => void;
   streakDays: number;
   onOpenNewTransaction: () => void;
-  onOpenAiAdvisor: () => void;
   onOpenSupabaseConfig: () => void;
   onOpenReminders: () => void;
   onOpenUserModal: () => void;
@@ -38,7 +37,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleDarkMode,
   streakDays,
   onOpenNewTransaction,
-  onOpenAiAdvisor,
   onOpenSupabaseConfig,
   onOpenReminders,
   onOpenUserModal,
@@ -89,15 +87,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Flame className="w-4 h-4 text-orange-500 fill-orange-500 animate-bounce" />
             <span>{streakDays} Hari</span>
-          </button>
-
-          {/* AI Advisor Quick Button */}
-          <button
-            onClick={onOpenAiAdvisor}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold text-xs shadow-md shadow-purple-500/20 hover:opacity-95 hover:scale-105 active:scale-95 transition"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>AI Advisor</span>
           </button>
 
           {/* Supabase Button */}

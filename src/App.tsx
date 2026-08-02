@@ -8,7 +8,6 @@ import { ReportsView } from './components/ReportsView';
 import { WalletsView } from './components/WalletsView';
 import { BudgetsGoalsView } from './components/BudgetsGoalsView';
 import { SettingsView } from './components/SettingsView';
-import { AiAdvisorModal } from './components/AiAdvisorModal';
 import { ReminderSettingsModal } from './components/ReminderSettingsModal';
 import { SupabaseConfigModal } from './components/SupabaseConfigModal';
 import { AuthModal } from './components/AuthModal';
@@ -87,7 +86,6 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   // Modals States
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -316,15 +314,6 @@ export default function App() {
     setGoals([]);
   };
 
-  // Render Full-page LoginPage if user is not logged in
-  if (!currentUser) {
-    return (
-      <LoginPage
-        onLoginOrCreate={handleLoginOrCreate}
-      />
-    );
-  }
-
   // Handlers for Reminders & Supabase
   const handleSaveReminder = async (remData: Partial<DailyReminder>) => {
     const updated = await saveReminders(remData);
@@ -335,6 +324,15 @@ export default function App() {
     const updated = await saveSupabaseConfig(cfg);
     setSupabaseConfigState(updated);
   };
+
+  // Render Full-page LoginPage if user is not logged in
+  if (!currentUser) {
+    return (
+      <LoginPage
+        onLoginOrCreate={handleLoginOrCreate}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
@@ -347,7 +345,6 @@ export default function App() {
         onToggleDarkMode={() => setDarkMode(!darkMode)}
         streakDays={reminder.streakDays || 0}
         onOpenNewTransaction={() => setActiveTab('transactions')}
-        onOpenAiAdvisor={() => setIsAiModalOpen(true)}
         onOpenSupabaseConfig={() => setIsSupabaseModalOpen(true)}
         onOpenReminders={() => setIsReminderModalOpen(true)}
         onOpenUserModal={() => setIsUserModalOpen(true)}
@@ -361,18 +358,12 @@ export default function App() {
         {/* Desktop Sidebar */}
         <Sidebar
           activeTab={activeTab}
-          onSelectTab={(tab) => {
-            if (tab === 'ai') {
-              setIsAiModalOpen(true);
-            } else {
-              setActiveTab(tab);
-            }
-          }}
+          onSelectTab={setActiveTab}
           streakDays={reminder.streakDays || 0}
         />
 
         {/* Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-full overflow-x-hidden">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 max-w-full overflow-x-hidden">
           {activeTab === 'dashboard' && (
             <DashboardView
               currentUser={currentUser}
@@ -381,7 +372,6 @@ export default function App() {
               categories={categories}
               budgets={budgets}
               onOpenNewTransaction={() => setActiveTab('transactions')}
-              onOpenAiAdvisor={() => setIsAiModalOpen(true)}
               onSelectTab={setActiveTab}
             />
           )}
@@ -395,7 +385,6 @@ export default function App() {
               onCreateTransaction={handleCreateTransaction}
               onUpdateTransaction={handleUpdateTransaction}
               onDeleteTransaction={handleDeleteTransaction}
-              onOpenAiScanReceipt={(imgData) => setIsAiModalOpen(true)}
             />
           )}
 
@@ -449,23 +438,10 @@ export default function App() {
       {/* Mobile Bottom Navigation */}
       <MobileNav
         activeTab={activeTab}
-        onSelectTab={(tab) => {
-          if (tab === 'ai') {
-            setIsAiModalOpen(true);
-          } else {
-            setActiveTab(tab);
-          }
-        }}
+        onSelectTab={setActiveTab}
       />
 
       {/* Modals */}
-      <AiAdvisorModal
-        isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        transactions={transactions}
-        accounts={accounts}
-      />
-
       <ReminderSettingsModal
         isOpen={isReminderModalOpen}
         onClose={() => setIsReminderModalOpen(false)}

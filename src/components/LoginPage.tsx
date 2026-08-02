@@ -58,8 +58,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         {/* Left Side: Brand Hero Section */}
         <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-indigo-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-xs">
-            <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
-            <span>Dompetku v2.0 • AI Financial Assistant</span>
+            <Wallet className="w-4 h-4 text-emerald-400" />
+            <span>Dompetku v2.0 • Aplikasi Manajemen Keuangan</span>
           </div>
 
           <div className="space-y-3">
@@ -72,7 +72,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               </h1>
             </div>
             <p className="text-sm sm:text-base text-slate-400 leading-relaxed font-normal">
-              Kelola dompet, anggaran bulanan, dan tabungan Anda secara cerdas dengan analisis finansial otomatis berbasis AI Gemini & Supabase Cloud.
+              Kelola dompet, anggaran bulanan, dan tabungan Anda secara praktis dengan pencatatan transaksi serta sinkronisasi cloud real-time.
             </p>
           </div>
 
@@ -87,8 +87,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               <span className="text-xs font-bold text-slate-300">Laporan Visual</span>
             </div>
             <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
-              <span className="text-xs font-bold text-slate-300">Gemini AI OCR</span>
+              <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />
+              <span className="text-xs font-bold text-slate-300">Target Tabungan</span>
             </div>
             <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-2.5">
               <Database className="w-4 h-4 text-teal-400 shrink-0" />

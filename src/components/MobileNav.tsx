@@ -5,7 +5,7 @@ import {
   BarChart3,
   WalletCards,
   Target,
-  Sparkles,
+  Settings,
 } from 'lucide-react';
 import { TabType } from './Sidebar';
 
@@ -21,24 +21,24 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, onSelectTab }) 
     { id: 'reports', label: 'Grafik', icon: <BarChart3 className="w-5 h-5" /> },
     { id: 'wallets', label: 'Dompet', icon: <WalletCards className="w-5 h-5" /> },
     { id: 'budgets', label: 'Anggaran', icon: <Target className="w-5 h-5" /> },
-    { id: 'ai', label: 'Gemini AI', icon: <Sparkles className="w-5 h-5" /> },
+    { id: 'settings', label: 'Pengaturan', icon: <Settings className="w-5 h-5" /> },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 flex items-center justify-around">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800/90 px-1 py-1.5 flex items-center justify-around shadow-2xl">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
             onClick={() => onSelectTab(tab.id)}
-            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+            className={`flex flex-col items-center justify-center py-1 px-1.5 sm:px-2.5 rounded-xl transition-all duration-150 ${
               isActive
-                ? 'text-blue-600 dark:text-blue-400 font-bold scale-105'
-                : 'text-slate-500 dark:text-slate-400 font-medium'
+                ? 'text-purple-600 dark:text-purple-400 font-extrabold scale-105 bg-purple-50/80 dark:bg-purple-950/40'
+                : 'text-slate-500 dark:text-slate-400 font-medium hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            <div className={isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}>
+            <div className={isActive ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-slate-500'}>
               {tab.icon}
             </div>
             <span className="text-[10px] mt-0.5 tracking-tight">{tab.label}</span>

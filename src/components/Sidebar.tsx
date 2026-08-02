@@ -12,7 +12,7 @@ import {
   Flame,
 } from 'lucide-react';
 
-export type TabType = 'dashboard' | 'transactions' | 'reports' | 'wallets' | 'budgets' | 'ai' | 'settings';
+export type TabType = 'dashboard' | 'transactions' | 'reports' | 'wallets' | 'budgets' | 'settings';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -46,12 +46,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, streak
       id: 'budgets',
       label: 'Anggaran & Tabungan',
       icon: <Target className="w-5 h-5" />,
-    },
-    {
-      id: 'ai',
-      label: 'Penasihat AI Gemini',
-      icon: <Sparkles className="w-5 h-5 text-amber-300" />,
-      badge: 'AI',
     },
     {
       id: 'settings',
